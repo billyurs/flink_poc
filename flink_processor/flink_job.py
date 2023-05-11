@@ -3,7 +3,6 @@ from pyflink.table import (EnvironmentSettings, TableEnvironment)
 from threading import Thread
 table_env = TableEnvironment.create(EnvironmentSettings.in_streaming_mode())
 table_env.get_config().get_configuration().set_string("pipeline.classpaths", "file:///Users/symphonyai/Documents/work/flink_sql/jar_files/flink-sql-connector-kafka-1.17.0.jar;file:///Users/symphonyai/Documents/work/flink_sql/jar_files/flink-shaded-force-shading-16.1.jar")
-
 table_env.get_config().set("parallelism.default", "1")
 
 # 1. create source Table
@@ -29,7 +28,7 @@ table_env.execute_sql("""
           );
 """)
 
-every_hourly_result_query = table_env.sql_query("""
+every_minute_result_query = table_env.sql_query("""
 SELECT
    channel_id,
    window_start,
@@ -41,24 +40,8 @@ SELECT
    ROUND(MAX(channel_value),1) as  maxReading,
    ROUND(MIN(channel_value),1) as  minReading,
    ROUND(STDDEV(channel_value),1) as  stdReading
- FROM TABLE(TUMBLE(TABLE measurements, DESCRIPTOR(eventTime_ltz), INTERVAL '1' HOUR))
+ FROM TABLE(TUMBLE(TABLE measurements, DESCRIPTOR(eventTime_ltz), INTERVAL '1' MINUTE))
  GROUP BY channel_id, window_start, window_end;
- """)
-
-every_two_hourly_result_query = table_env.sql_query("""
-SELECT
-   channel_id,
-   window_start,
-   window_end,
-   2 as hourly_frequency,
-   COUNT(channel_value) AS totalReadings,
-   LISTAGG(CAST(channel_value AS STRING)) AS readingsList,
-   ROUND(AVG(channel_value),1) as averageReading,
-   ROUND(MAX(channel_value),1) as  maxReading,
-   ROUND(MIN(channel_value),1) as  minReading,
-   ROUND(STDDEV(channel_value),1) as  stdReading
- FROM TABLE(TUMBLE(TABLE measurements, DESCRIPTOR(eventTime_ltz), INTERVAL '1' DAYS))
- GROUP BY channel_id, window_start, window_end, hourly_frequency;
  """)
 
 table_env.execute_sql("""
@@ -86,15 +69,12 @@ table_env.execute_sql("""
           );
 """)
 
-def dump_to_sink_hourly():
-    every_hourly_result_query.execute_insert("sink").print()
-
-def dump_to_sink_2_hourly():
-    every_two_hourly_result_query.execute_insert("sink").print()
+def dump_to_sink_minute():
+    every_minute_result_query.execute_insert("sink").print()
 
 #thread1 = Thread(target=dump_to_sink_hourly)
 #thread1.start()
 
 
-thread2 = Thread(target=dump_to_sink_2_hourly)
+thread2 = Thread(target=dump_to_sink_minute)
 thread2.start()

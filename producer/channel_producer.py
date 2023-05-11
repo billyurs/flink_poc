@@ -88,7 +88,7 @@ def main():
             time.sleep(3)
 
         # Sleep for a longer time before generating measurements for next cycle
-        time.sleep(300)
+        time.sleep(10)
 
 
 if __name__ == '__main__':
