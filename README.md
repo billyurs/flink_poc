@@ -42,6 +42,7 @@ table_env.get_config().get_configuration().set_string("pipeline.classpaths", "fi
 Then, run the following command:
 
 ```
+cd flink_processor
 python flink_job.py
 ```
 
