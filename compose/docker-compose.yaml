@@ -6,8 +6,12 @@ services:
       - "2181:2181"
     environment:
       ALLOW_ANONYMOUS_LOGIN: "yes"
+    volumes:
+      - ./zookeeper/data:/bitnami/zookeeper/data
+      - ./zookeeper/logs:/bitnami/zookeeper/logs
     networks:
-      - kafka_network
+      - net1
+
   kafka:
     image: bitnami/kafka:3.3.1
     ports:
@@ -24,20 +28,26 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: >-
         INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+    volumes:
+      - ./kafka/data:/bitnami/kafka/data
+      - ./kafka/logs:/bitnami/kafka/logs
     depends_on:
       - zookeeper
     networks:
-      - kafka_network
-    volumes:
-      - kafka_data:/bitnami/kafka/data
+      - net1
+
   kafka-ui:
-    image: provectuslabs/kafka-ui
+    image: provectuslabs/kafka-ui:e31cd2e442518efa7e2dd92abfad208b9587bb47
     ports:
       - "8080:8080"
     environment:
       - DYNAMIC_CONFIG_ENABLED=true
+      - READ_ONLY=false
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
     networks:
-      - kafka_network
+      - net1
+
   jobmanager:
     build: .
 #    image: flink:latest
@@ -49,10 +59,11 @@ services:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
-    networks:
-      - flink_network
     volumes:
-      - flink_jobmanager_data:/opt/flink/jobmanager/data
+      - ./flink/jobs:/jobs
+    networks:
+      - net1
+
   taskmanager:
     build: .
 #    image: flink:latest
@@ -66,16 +77,11 @@ services:
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
         taskmanager.numberOfTaskSlots: 1
-    networks:
-      - flink_network
     volumes:
-      - flink_taskmanager_data:/opt/flink/taskmanager/data
+      - ./flink/jobs:/jobs
+    networks:
+      - net1
 
 networks:
-  kafka_network:
-  flink_network:
-
-volumes:
-  kafka_data:
-  flink_jobmanager_data:
-  flink_taskmanager_data:
+  net1:
+    driver: bridge
