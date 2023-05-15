@@ -6,6 +6,8 @@ services:
       - "2181:2181"
     environment:
       ALLOW_ANONYMOUS_LOGIN: "yes"
+    networks:
+      - kafka_network
   kafka:
     image: bitnami/kafka:3.3.1
     ports:
@@ -24,12 +26,18 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
     depends_on:
       - zookeeper
+    networks:
+      - kafka_network
+    volumes:
+      - kafka_data:/bitnami/kafka/data
   kafka-ui:
     image: provectuslabs/kafka-ui
     ports:
       - "8080:8080"
     environment:
       - DYNAMIC_CONFIG_ENABLED=true
+    networks:
+      - kafka_network
   jobmanager:
     build: .
 #    image: flink:latest
@@ -41,6 +49,10 @@ services:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
+    networks:
+      - flink_network
+    volumes:
+      - flink_jobmanager_data:/opt/flink/jobmanager/data
   taskmanager:
     build: .
 #    image: flink:latest
@@ -54,3 +66,16 @@ services:
         FLINK_PROPERTIES=
         jobmanager.rpc.address: jobmanager
         taskmanager.numberOfTaskSlots: 1
+    networks:
+      - flink_network
+    volumes:
+      - flink_taskmanager_data:/opt/flink/taskmanager/data
+
+networks:
+  kafka_network:
+  flink_network:
+
+volumes:
+  kafka_data:
+  flink_jobmanager_data:
+  flink_taskmanager_data:
