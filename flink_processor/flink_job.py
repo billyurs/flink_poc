@@ -5,9 +5,8 @@ from threading import Thread
 table_env = TableEnvironment.create(EnvironmentSettings.in_streaming_mode())
 
 # Set the necessary classpath for the Kafka connector and parallelism to 1
-table_env.get_config().get_configuration().set_string(
-    "pipeline.classpaths", "file:///Users/symphonyai/Documents/work/flink_sql/jar_files/flink-sql-connector-kafka-1.17.0.jar;file:///Users/symphonyai/Documents/work/flink_sql/jar_files/flink-shaded-force-shading-16.1.jar"
-)
+table_env.get_config().get_configuration().set_string("pipeline.classpaths", "file:///Users/symphonyai/Documents/work/flink-tutorial/flink_poc/compose/jars/flink-sql-connector-kafka-1.17.0.jar;"
+                                                                             "file:///Users/symphonyai/Documents/work/flink-tutorial/flink_poc/compose/jars/flink-shaded-force-shading-16.1.jar")
 table_env.get_config().set("parallelism.default", "1")
 
 # Create source table "measurements" with a watermark of 30 seconds
@@ -34,7 +33,7 @@ table_env.execute_sql("""
 """)
 
 # Query to calculate the rolling 1 minute window statistics
-every_minute_result_query = table_env.sql_query("""
+every_five_minute_result_query = table_env.sql_query("""
     SELECT
         channel_id,
         window_start,
@@ -46,11 +45,11 @@ every_minute_result_query = table_env.sql_query("""
         ROUND(MAX(channel_value),1) as  maxReading,
         ROUND(MIN(channel_value),1) as  minReading,
         ROUND(STDDEV(channel_value),1) as  stdReading
-    FROM TABLE(TUMBLE(TABLE measurements, DESCRIPTOR(eventTime_ltz), INTERVAL '1' MINUTE))
+    FROM TABLE(TUMBLE(TABLE measurements, DESCRIPTOR(eventTime_ltz), INTERVAL '5' MINUTE))
     GROUP BY channel_id, window_start, window_end;
  """)
 
-# Create sink table to output the 1 minute rolling window statistics
+# Create sink table to output the 5 minute rolling window statistics
 table_env.execute_sql("""
     CREATE TABLE sink (
         channel_id STRING,
@@ -76,7 +75,7 @@ table_env.execute_sql("""
     );
 """)
 def dump_to_sink_minute():
-    every_minute_result_query.execute_insert("sink").print()
+    every_five_minute_result_query.execute_insert("sink").print()
 
 thread2 = Thread(target=dump_to_sink_minute)
 thread2.start()
