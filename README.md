@@ -47,3 +47,14 @@ python flink_job.py
 
 This will submit the Flink job to the Flink cluster running in the Docker container.
 
+
+The topic names shown in the screenshots contain messages from the producer and results from Flink. For instance, the producer topic is named "channel.measurements" while the Flink sink topic is named "sink.measurement_reports"
+
+
+# Producer messages in kafka
+![Alt Text](./screenshots/producer_message.png)
+
+# Sink messages in kafka
+![Alt Text](./screenshots/sink_message.png)
+
+
