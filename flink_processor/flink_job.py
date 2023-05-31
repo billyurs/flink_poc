@@ -76,6 +76,7 @@ table_env.execute_sql("""
 """)
 def dump_to_sink_minute():
     every_five_minute_result_query.execute_insert("sink").print()
+    table_env.execute("Sample")
 
 thread2 = Thread(target=dump_to_sink_minute)
 thread2.start()
