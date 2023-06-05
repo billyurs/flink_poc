@@ -65,7 +65,8 @@ def main():
     while(True):
         for i in range(1, 11):
             # Generate random channel value and timestamp
-            channel_value = fake.random_int(min=10, max=2000)
+            channel_value = int(input(f"Please provide the value of channel {i}: "))
+            #channel_value = fake.random_int(min=10, max=2000)
             timestamp = int((time.time() + 0.5) * 1000)
 
             # Create a new Measurement object with generated values
@@ -88,6 +89,7 @@ def main():
             time.sleep(3)
 
         # Sleep for a longer time before generating measurements for next cycle
+        print("will wait for 15 seconds before proceeding")
         time.sleep(15)
 
 
