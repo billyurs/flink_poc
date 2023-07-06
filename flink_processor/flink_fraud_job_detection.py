@@ -91,17 +91,10 @@ table_env.execute_sql("""
 """)
 
 def dump_to_sink_minute():
-    #fraud_detection_query.execute_insert("sink_alert").print()
     table_env.sql_query("""
-    SELECT channel_id, eventTime_ltz, channel_value
-    FROM (
-        SELECT *,
-            LAG(eventTime_ltz) OVER (ORDER BY eventTime_ltz) AS last_recorded_timestamp
-        FROM measurements
-    ) subquery
-    WHERE timestamp_filter(channel_id, eventTime_ltz)
-       """).execute_insert("cleaned_measurements").print()
-    #table_env.execute("Sample")
+        SELECT channel_id, eventTime_ltz, channel_value
+        WHERE timestamp_filter(channel_id, eventTime_ltz)
+           """).execute_insert("cleaned_measurements").print()
 
 thread2 = Thread(target=dump_to_sink_minute)
 thread2.start()
