@@ -1,17 +1,8 @@
 from pyflink.table import (EnvironmentSettings, TableEnvironment)
 from threading import Thread
-from pyflink.table.udf import ScalarFunction, UserDefinedFunction
 from pyflink.table.udf import udf
-from pyflink.table.udf import UserDefinedScalarFunctionWrapper
 from pyflink.table.types import DataTypes
-import datetime
-
-
-# Define the Python scalar function
 def timestamp_filter(channel_id,timestamp):
-    # Implement the logic to filter timestamps based on your requirements
-    # Initialize last_recorded_timestamp if it is not already initialized
-
     if channel_id not in globals():
         globals()[channel_id] = {'last_recorded_timestamp': timestamp}
         return True
@@ -62,16 +53,7 @@ table_env.execute_sql("""
     );
 """)
 
-# Query to calculate the rolling 1 minute window statistics
-fraud_detection_query = table_env.sql_query("""
-    SELECT channel_id, COUNT(*) as event_count, CURRENT_TIMESTAMP
-    FROM TABLE(TUMBLE(TABLE measurements, DESCRIPTOR(eventTime_ltz), INTERVAL '1' MINUTE)) 
-    GROUP BY channel_id
-    HAVING COUNT(*) > 1;
- """)
-
-
-# Create sink table to output the 5 minute rolling window statistics
+# Create sink table which has non spammed measurements
 table_env.execute_sql("""
     CREATE TABLE cleaned_measurements (
         channel_id STRING,
